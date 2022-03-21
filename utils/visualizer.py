@@ -148,9 +148,21 @@ class Visualizer(object):
 
     def draw_roc(self, fpr, tpr):
         self.viz.line(Y=np.array(tpr), X=np.array(fpr),
-                      name='roc_curve',
+                      name='roc_curve_AE',
                       win='roc_curve',
                       opts=dict(title='roc_curve', showlegend=True))
+
+    def draw_pr(self, recall, precision):
+        self.viz.line(Y=np.array(precision), X=np.array(recall),
+                      name='pr_curve_AE',
+                      win='pr_curve',
+                      opts=dict(title='pr_curve', showlegend=True))
+
+    def draw_iou(self, fpr, iou):
+        self.viz.line(Y=np.array(iou), X=np.array(fpr),
+                      name='iou_curve_AE',
+                      win='iou_curve',
+                      opts=dict(title='iou_curve', showlegend=True))
 
     def save(self, env):
         self.viz.save([env])

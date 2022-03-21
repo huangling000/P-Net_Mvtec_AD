@@ -173,10 +173,7 @@ class RunMyModel(object):
         self.iou_top10 = AverageMeter()
         self.iou_last20 = LastAvgMeter()
 
-        if args.predict:
-            pass
-        else:
-            self.train_val()
+        self.train_val()
 
     def train_val(self):
         # general metrics
@@ -191,7 +188,7 @@ class RunMyModel(object):
             self.train(epoch)
 
             if epoch % self.args.val_freq == 0:
-                self.validate_cls()
+                self.validate_cls(epoch)
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
             print('Node: {}'.format(self.args.node))
@@ -231,10 +228,10 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if i == 0:
+            if epoch % 200 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
-                image_diff = torch.abs(image-image_rec)
+                image_diff = torch.abs(image - image_rec)
                 vim_images = torch.cat([image, image_rec, image_diff], dim=0)
                 self.vis.images(vim_images, win_name='train', nrow=self.args.vis_batch)
 
@@ -246,14 +243,14 @@ class RunMyModel(object):
                                     os.path.join(output_save, 'train_{}_{}.png'.format(epoch, i)),
                                     nrow=self.args.vis_batch)
 
-            if i+1 == train_loader.__len__():
+            if i + 1 == train_loader.__len__():
                 self.vis.plot_multi_win(dict(dis_loss=dis_loss.item()))
                 self.vis.plot_single_win(dict(gen_loss=gen_loss.item(),
                                               gen_l2_loss=logs['gen_l2_loss'].item(),
                                               gen_gan_loss=logs['gen_gan_loss'].item()),
                                          win='gen_loss')
 
-    def validate_cls(self):
+    def validate_cls(self, epoch):
         self.model.eval()
 
         with torch.no_grad():
@@ -261,11 +258,11 @@ class RunMyModel(object):
             Difference: abnormal dataloader and abnormal_list
             """
             _, normal_train_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_train_loader, is_disease=False)
+                loader=self.normal_train_loader, is_disease=False, epoch = epoch)
             abnormal_gt_list, abnormal_pred_list, abnormal_iou = self.forward_cls_dataloader(
-                loader=self.abnormal_loader, is_disease=True, category='val_abnormal')
+                loader=self.abnormal_loader, is_disease=True, category='val_abnormal', epoch = epoch)
             normal_test_gt_list, normal_test_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_test_loader, is_disease=False, category='val_normal')
+                loader=self.normal_test_loader, is_disease=False, category='val_normal', epoch = epoch)
 
             """
             computer metrics
@@ -277,6 +274,7 @@ class RunMyModel(object):
 
             # get roc curve and compute the auc
             fpr, tpr, thresholds = metrics.roc_curve(np.array(true_list), np.array(pred_list))
+            precision, recall, thresholds = metrics.precision_recall_curve(np.array(true_list), np.array(pred_list))
             auc = metrics.auc(fpr, tpr)
 
             """
@@ -315,40 +313,45 @@ class RunMyModel(object):
             """
             plot metrics curve
             """
-            # ROC curve
-            self.vis.draw_roc(fpr, tpr)
-            # total auc, primary metrics
-            self.vis.plot_single_win(dict(value=auc,
-                                          best=self.best_auc,
-                                          last_avg=self.auc_last20.avg,
-                                          last_std=self.auc_last20.std,
-                                          top_avg=auc_mean,
-                                          top_dev=auc_deviation), win='auc')
-            self.vis.plot_single_win(dict(value=acc,
-                                          best=self.best_acc,
-                                          last_avg=self.acc_last20.avg,
-                                          last_std=self.acc_last20.std,
-                                          top_avg=acc_mean,
-                                          top_dev=acc_deviation,
-                                          sen=sen,
-                                          spe=spe), win='accuracy')
-            self.vis.plot_single_win(dict(value=iou,
-                                          best=self.best_iou,
-                                          last_avg=self.iou_last20.avg,
-                                          last_std=self.iou_last20.std,
-                                          top_avg=iou_mean,
-                                          top_dev=iou_deviation), win='iou')
+            if epoch % 50:
+                # ROC curve
+                self.vis.draw_roc(fpr, tpr)
+                # PR curve
+                self.vis.draw_pr(recall, precision)
+                # IoU curve
+                # self.vis.draw_iou(fpr, iou)
+                # total auc, primary metrics
+                self.vis.plot_single_win(dict(value=auc,
+                                              best=self.best_auc,
+                                              last_avg=self.auc_last20.avg,
+                                              last_std=self.auc_last20.std,
+                                              top_avg=auc_mean,
+                                              top_dev=auc_deviation), win='auc')
+                self.vis.plot_single_win(dict(value=acc,
+                                              best=self.best_acc,
+                                              last_avg=self.acc_last20.avg,
+                                              last_std=self.acc_last20.std,
+                                              top_avg=acc_mean,
+                                              top_dev=acc_deviation,
+                                              sen=sen,
+                                              spe=spe), win='accuracy')
+                self.vis.plot_single_win(dict(value=iou,
+                                              best=self.best_iou,
+                                              last_avg=self.iou_last20.avg,
+                                              last_std=self.iou_last20.std,
+                                              top_avg=iou_mean,
+                                              top_dev=iou_deviation), win='iou')
 
-            metrics_str = 'best_auc = {:.4f},' \
-                          'auc_last20_avg = {:.4f}, auc_last20_std = {:.4f}, ' \
-                          'auc_top10_avg = {:.4f}, auc_top10_dev = {:.4f}, '.\
-                format(self.best_auc, self.auc_last20.avg, self.auc_last20.std, auc_mean, auc_deviation)
-            metrics_acc_str = '\n best_acc = {:.4f}, ' \
-                              'acc_last20_avg = {:.4f}, acc_last20_std = {:.4f}, ' \
-                              'acc_top10_avg = {:.4f}, acc_top10_dev = {:.4f}, '.\
-                format(self.best_acc, self.acc_last20.avg, self.acc_last20.std, acc_mean, acc_deviation)
+                metrics_str = 'best_auc = {:.4f},' \
+                              'auc_last20_avg = {:.4f}, auc_last20_std = {:.4f}, ' \
+                              'auc_top10_avg = {:.4f}, auc_top10_dev = {:.4f}, '. \
+                    format(self.best_auc, self.auc_last20.avg, self.auc_last20.std, auc_mean, auc_deviation)
+                metrics_acc_str = '\n best_acc = {:.4f}, ' \
+                                  'acc_last20_avg = {:.4f}, acc_last20_std = {:.4f}, ' \
+                                  'acc_top10_avg = {:.4f}, acc_top10_dev = {:.4f}, '. \
+                    format(self.best_acc, self.acc_last20.avg, self.acc_last20.std, acc_mean, acc_deviation)
 
-            self.vis.text(metrics_str + metrics_acc_str)
+                self.vis.text(metrics_str + metrics_acc_str)
 
         save_ckpt(version=self.args.version,
                   state={
@@ -364,7 +367,7 @@ class RunMyModel(object):
         print('\n Save ckpt successfully!')
         print('\n', metrics_str + metrics_acc_str)
 
-    def forward_cls_dataloader(self, loader, is_disease, category='train_normal'):
+    def forward_cls_dataloader(self, loader, is_disease, epoch, category='train_normal'):
         gt_list = []
         pred_list = []
         iou_list = []
@@ -405,38 +408,40 @@ class RunMyModel(object):
             """
             save images
             """
+            if epoch % 200 == 0:
+                output_save = os.path.join(self.args.output_root,
+                                           '{}'.format(self.args.version),
+                                           'sample')
 
-            output_save = os.path.join(self.args.output_root,
-                                       '{}'.format(self.args.version),
-                                       'sample')
-
-            if not os.path.exists(output_save):
-                os.makedirs(output_save)
-            tv.utils.save_image(vim_images, os.path.join(
-                output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=image.size(0))
-            """
-            visdom
-            """
-            if i == 0 and category != 'train_normal':
-                image = image[:self.args.vis_batch]
-                image_rec = image_rec[:self.args.vis_batch]
-                mask = mask[:self.args.vis_batch]
-                image_diff = torch.abs(image - image_rec)
+                if not os.path.exists(output_save):
+                    os.makedirs(output_save)
+                tv.utils.save_image(vim_images, os.path.join(
+                    output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=image.size(0))
                 """
-                Difference: edge is different between fundus and oct images
+                visdom
                 """
-                if category == 'val_normal':
-                    vim_images = torch.cat([image, image_rec, image_diff], dim=0)
-                else:
-                    mask_vis = torch.cat([mask, mask, mask], dim=1)
-                    vim_images = torch.cat([image, image_rec, image_diff, mask_vis.cuda()], dim=0)
+                if i == 0 and category != 'train_normal':
+                    image = image[:self.args.vis_batch]
+                    image_rec = image_rec[:self.args.vis_batch]
+                    mask = mask[:self.args.vis_batch]
+                    image_diff = torch.abs(image - image_rec)
+                    """
+                    Difference: edge is different between fundus and oct images
+                    """
+                    if category == 'val_normal':
+                        vim_images = torch.cat([image, image_rec, image_diff], dim=0)
+                    else:
+                        mask_vis = torch.cat([mask, mask, mask], dim=1)
+                        vim_images = torch.cat([image, image_rec, image_diff, mask_vis.cuda()], dim=0)
 
-                self.vis.images(vim_images, win_name='{}'.format(category), nrow=self.args.vis_batch)
+                    # self.vis.images(vim_images, win_name='{}'.format(category), nrow=self.args.vis_batch)
 
-                for n in range(self.args.vis_batch):
-                    self.vis.plot_histogram(image_diff[n].max(dim=1)[0].view(-1), win='{}_{}'.format(category, n), numbins=500)
-                    if n > 4:
-                        break
+                    '''
+                    for n in range(self.args.vis_batch):
+                        self.vis.plot_histogram(image_diff[n].max(dim=1)[0].view(-1), win='{}_{}'.format(category, n), numbins=500)
+                        if n > 4:
+                            break
+                    '''
         return gt_list, pred_list, torch.FloatTensor(iou_list)
 
 

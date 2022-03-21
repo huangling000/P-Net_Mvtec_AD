@@ -30,8 +30,8 @@ class ParserArgs(object):
 
     def constant_init(self):
         # path and server
-        self.data_root = '/p300/datasets'
-        self.output_root = '/root/ECCV-2020/workspace'
+        self.data_root = './datasets'
+        self.output_root = './workspace'
         self.vis_server = 'http://10.10.10.100'
         # constant
         self.parser.add_argument('--project', default='ano_det_cvpr2020',
@@ -153,7 +153,7 @@ class ParserArgs(object):
 
     def get_freq_and_other_parser(self):
         # other useful args
-        self.parser.add_argument('--val_freq', default=10, type=int,
+        self.parser.add_argument('--val_freq', default=50, type=int,
                                  help='validate frequency (default: 5)')
         self.parser.add_argument('--val_start_epoch', default=0, type=int)
         self.parser.add_argument('--save_model_freq', default=500, type=int)
