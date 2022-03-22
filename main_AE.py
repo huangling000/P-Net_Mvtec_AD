@@ -146,7 +146,7 @@ class RunMyModel(object):
 
         cudnn.benchmark = True
 
-        self.vis = Visualizer(env='{}'.format(args.version), port=args.port, server=args.vis_server)
+        self.vis = Visualizer(env='{}'.format(args.version), port=args.port, server=args.vis_server, model="AE")
         self.normal_train_loader, self.normal_test_loader, self.abnormal_loader =\
             Mvtec_Dataloader(data_root=args.mvtec_root,
                              batch=args.batch,
@@ -326,7 +326,7 @@ class RunMyModel(object):
                                               last_avg=self.auc_last20.avg,
                                               last_std=self.auc_last20.std,
                                               top_avg=auc_mean,
-                                              top_dev=auc_deviation), win='auc')
+                                              top_dev=auc_deviation), win='auc', update="append")
                 self.vis.plot_single_win(dict(value=acc,
                                               best=self.best_acc,
                                               last_avg=self.acc_last20.avg,
@@ -334,13 +334,13 @@ class RunMyModel(object):
                                               top_avg=acc_mean,
                                               top_dev=acc_deviation,
                                               sen=sen,
-                                              spe=spe), win='accuracy')
+                                              spe=spe), win='accuracy', update="append")
                 self.vis.plot_single_win(dict(value=iou,
                                               best=self.best_iou,
                                               last_avg=self.iou_last20.avg,
                                               last_std=self.iou_last20.std,
                                               top_avg=iou_mean,
-                                              top_dev=iou_deviation), win='iou')
+                                              top_dev=iou_deviation), win='iou', update="append")
 
                 metrics_str = 'best_auc = {:.4f},' \
                               'auc_last20_avg = {:.4f}, auc_last20_std = {:.4f}, ' \

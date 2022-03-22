@@ -18,13 +18,14 @@ import pdb
 
 
 class Visualizer(object):
-    def __init__(self, env='main', port=31430, **kwargs):
+    def __init__(self, env='main', port=31430, model="default", **kwargs):
         self.viz = visdom.Visdom(env=env, port=port, **kwargs)
         # 画的第几个数，相当于横坐标
         # 比如（’loss',23） 即loss的第23个点
         self.index = {}
         self.win_index = {}
         self.log_text = ''
+        self.model = model
 
     def plot_histogram(self, x, win, numbins=30):
         self.viz.histogram(x, win=win, opts=dict(numbins=numbins, title=win))
@@ -41,21 +42,22 @@ class Visualizer(object):
         for k, v in d.items():
             self.plot(k, v, long_update)
 
-    def plot_single_win(self, d, win, loop_i=1):
+    def plot_single_win(self, d, win, loop_i=1, update=None):
         """
         :param d: dict (name, value) i.e. ('loss', 0.11)
         :param win: only one win
         :param loop_i: i.e. plot testing loss and label
         :return:
         """
+
         for k, v in d.items():
             index_k = '{}_{}'.format(k, win)
             x = self.index.get(index_k, 0)
             self.viz.line(Y=np.array([v]), X=np.array([x]),
-                          name=k,
+                          name=k if model == "default" else '{}_{}'.format(self.model, k),
                           win=win,
                           opts=dict(title=win, showlegend=True),
-                          update='append' if (self.win_index.get(win, 0) > 0 and loop_i > 0) else None)
+                          update= update if update is not None else ('append' if self.win_index.get(win, 0) > 0 and loop_i > 0 else None))
                           # update=None if (x == 0 or loop_i == 0) else 'append')
             self.index[index_k] = x + 1
             self.win_index[win] = 1
