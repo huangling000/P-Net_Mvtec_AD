@@ -23,6 +23,7 @@ class Visualizer(object):
         # 画的第几个数，相当于横坐标
         # 比如（’loss',23） 即loss的第23个点
         self.index = {}
+        self.win_index = {}
         self.log_text = ''
 
     def plot_histogram(self, x, win, numbins=30):
@@ -54,9 +55,10 @@ class Visualizer(object):
                           name=k,
                           win=win,
                           opts=dict(title=win, showlegend=True),
-                          update='append' if (x > 0 and loop_i > 0) else None)
+                          update='append' if (self.win_index.get(win, 0) > 0 and loop_i > 0) else None)
                           # update=None if (x == 0 or loop_i == 0) else 'append')
             self.index[index_k] = x + 1
+            self.win_index[win] = 1
 
     def plot_legend(self, win, name, y, long_update=True, **kwargs):
         '''

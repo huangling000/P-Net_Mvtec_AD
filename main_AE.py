@@ -110,7 +110,7 @@ class AE_NetModel(nn.Module):
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * self.args.lamd_gen
         gen_loss += gen_gan_loss
 
-        # generator l2 loss
+        # generator l2 loss:上下文损失
         gen_l2_loss = self.l2_loss(fake_B, real_B) * self.args.lamd_p
         gen_loss += gen_l2_loss
 
@@ -228,7 +228,7 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if epoch % 200 == 0 and i == 0:
+            if epoch % 199 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
@@ -313,7 +313,7 @@ class RunMyModel(object):
             """
             plot metrics curve
             """
-            if epoch % 50:
+            if epoch % 30 == 0:
                 # ROC curve
                 self.vis.draw_roc(fpr, tpr)
                 # PR curve
@@ -352,6 +352,7 @@ class RunMyModel(object):
                     format(self.best_acc, self.acc_last20.avg, self.acc_last20.std, acc_mean, acc_deviation)
 
                 self.vis.text(metrics_str + metrics_acc_str)
+                print('\n', metrics_str + metrics_acc_str)
 
         save_ckpt(version=self.args.version,
                   state={
@@ -365,7 +366,6 @@ class RunMyModel(object):
                   args=self.args)
 
         print('\n Save ckpt successfully!')
-        print('\n', metrics_str + metrics_acc_str)
 
     def forward_cls_dataloader(self, loader, is_disease, epoch, category='train_normal'):
         gt_list = []
@@ -408,7 +408,7 @@ class RunMyModel(object):
             """
             save images
             """
-            if epoch % 200 == 0:
+            if epoch % 199 == 0:
                 output_save = os.path.join(self.args.output_root,
                                            '{}'.format(self.args.version),
                                            'sample')

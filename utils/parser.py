@@ -83,7 +83,7 @@ class ParserArgs(object):
         # model hyper-parameters
         self.parser.add_argument('--start_epoch', default=0, type=int,
                                  help='numbet of start epoch of edge segmentation to run')
-        self.parser.add_argument('--n_epochs', default=800, type=int, metavar='N',
+        self.parser.add_argument('--n_epochs', default=1200, type=int, metavar='N',
                                  help='number of total epochs to run')
         self.parser.add_argument('--batch', default=18, type=int,
                                  metavar='N', help='mini-batch size')
@@ -99,6 +99,8 @@ class ParserArgs(object):
                                  help='adam: decay of first order momentum of gradient')
         self.parser.add_argument('--lamd_p', '--lamd_pixel', default=1, type=float,
                                  help='Loss weight of L1 pixel-wise loss between translated image and real image')
+        self.parser.add_argument('--lamd_f', '--lamd_feat', default=0.1, type=float,
+                                 help='Loss weight of feature loss between translated image and real image')
         self.parser.add_argument('--lamd_fm', default=0.01, type=float)
         self.parser.add_argument('--lamd_gen', default=0.1, type=float)
         self.parser.add_argument('--latent_size', default=1024, type=int)

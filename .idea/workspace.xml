@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="763d9e20-8a97-4e65-9f36-c40a2aba6733" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/main_SelfAttenAE.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_AE.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_AE.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/AE_GAN.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/AE_GAN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/discriminator.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/discriminator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/visualizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/visualizer.py" afterDir="false" />
     </list>
@@ -38,11 +41,22 @@
       <option name="presentableId" value="Default" />
       <updated>1647827759628</updated>
       <workItem from="1647827761442" duration="7662000" />
-      <workItem from="1647836996473" duration="4059000" />
+      <workItem from="1647836996473" duration="41096000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
