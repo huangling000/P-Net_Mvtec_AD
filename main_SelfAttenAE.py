@@ -69,7 +69,7 @@ class AAE_NetModel(nn.Module):
                                             betas=(args.b1, args.b2))
 
         if self.args.resume:
-            ckpt_root = os.path.join(self.args.output_root, self.args.version, 'checkpoints')
+            ckpt_root = os.path.join(self.args.output_root, '{}_{}'.format(self.args.version, 'SA_AE'), 'checkpoints')
             ckpt_path = os.path.join(ckpt_root, args.resume)
             if os.path.isfile(ckpt_path):
                 print("=> loading checkpoint '{}'".format(args.resume))
@@ -172,7 +172,8 @@ class RunMyModel(object):
 
         cudnn.benchmark = True
 
-        self.vis = Visualizer(env='{}'.format(args.version), port=args.port, server=args.vis_server)
+        self.vis = Visualizer(env='{}'.format(args.version), port=args.port, server=args.vis_server, model='SA_AE')
+        self.vis2 = Visualizer(env='{}_{}'.format(args.version, 'SA_AE'), port=args.port, server=args.vis_server, model='SA_AE')
         self.normal_train_loader, self.normal_test_loader, self.abnormal_loader =\
             Mvtec_Dataloader(data_root=args.mvtec_root,
                              batch=args.batch,
@@ -203,7 +204,7 @@ class RunMyModel(object):
 
     def train_val(self):
         # general metrics
-        self.vis.text(str(vars(self.args)), name='args')
+        self.vis2.text(str(vars(self.args)), name='args')
         for epoch in range(self.args.start_epoch, self.args.n_epochs):
             adjust_lr_epoch_list = [500]
             _ = adjust_lr(self.args.lr, self.model.optimizer_E, epoch, adjust_lr_epoch_list)
@@ -213,13 +214,13 @@ class RunMyModel(object):
             self.epoch = epoch
             self.train(epoch)
 
-            if epoch % self.args.val_freq == 0:
+            if (epoch + 1) % self.args.val_freq == 0:
                 self.validate_cls(epoch)
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
             print('Node: {}'.format(self.args.node))
             print('GPU: {}'.format(self.args.gpu))
-            print('Version: {}\n'.format(self.args.version))
+            print('Version: {}_{}\n'.format(self.args.version, 'SA_AE'))
 
     def train(self, epoch):
         self.model.train()
@@ -254,15 +255,15 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if (epoch + 1) % 199 == 0 and i == 0:
+            if (epoch + 1) % 200 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
                 vim_images = torch.cat([image, image_rec, image_diff], dim=0)
-                self.vis.images(vim_images, win_name='train', nrow=self.args.vis_batch)
+                self.vis2.images(vim_images, win_name='train', nrow=self.args.vis_batch)
 
                 output_save = os.path.join(self.args.output_root,
-                                           self.args.version,
+                                           '{}_{}'.format(self.args.version, 'SA_AE'),
                                            'sample')
                 os.makedirs(output_save, exist_ok=True)
                 tv.utils.save_image(vim_images,
@@ -270,8 +271,8 @@ class RunMyModel(object):
                                     nrow=self.args.vis_batch)
 
             if i + 1 == train_loader.__len__():
-                self.vis.plot_multi_win(dict(dis_loss=dis_loss.item()))
-                self.vis.plot_single_win(dict(gen_loss=gen_loss.item(),
+                self.vis2.plot_multi_win(dict(dis_loss=dis_loss.item()))
+                self.vis2.plot_single_win(dict(gen_loss=gen_loss.item(),
                                               gen_l2_loss=logs['gen_l2_loss'].item(),
                                               gen_gan_loss=logs['gen_gan_loss'].item(),
                                               gen_f_loss=(logs['gen_f1_loss'].item() +
@@ -287,11 +288,11 @@ class RunMyModel(object):
             Difference: abnormal dataloader and abnormal_list
             """
             _, normal_train_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_train_loader, is_disease=False, epoch = epoch)
+                loader=self.normal_train_loader, is_disease=False, epoch=epoch)
             abnormal_gt_list, abnormal_pred_list, abnormal_iou = self.forward_cls_dataloader(
-                loader=self.abnormal_loader, is_disease=True, category='val_abnormal', epoch = epoch)
+                loader=self.abnormal_loader, is_disease=True, category='val_abnormal', epoch=epoch)
             normal_test_gt_list, normal_test_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_test_loader, is_disease=False, category='val_normal', epoch = epoch)
+                loader=self.normal_test_loader, is_disease=False, category='val_normal', epoch=epoch)
 
             """
             computer metrics
@@ -342,20 +343,25 @@ class RunMyModel(object):
             """
             plot metrics curve
             """
-            if epoch % 30 == 0:
+            if (epoch + 1) % 30 == 0:
                 # ROC curve
-                self.vis.draw_roc(fpr, tpr)
+                self.vis2.draw_roc(fpr, tpr)
                 # PR curve
-                self.vis.draw_pr(recall, precision)
+                self.vis2.draw_pr(recall, precision)
+
+                # 最后一轮将最终pr与roc追加到vis中
+                if (epoch + 1) == self.args.n_epochs:
+                    self.vis.draw_roc(fpr, tpr, update='append')
+                    self.vis.draw_pr(recall, precision, update='append')
                 # IoU curve
                 # self.vis.draw_iou(fpr, iou)
-                # total auc, primary metrics
+                # total auc, primary metrics，每轮追加
                 self.vis.plot_single_win(dict(value=auc,
                                               best=self.best_auc,
                                               last_avg=self.auc_last20.avg,
                                               last_std=self.auc_last20.std,
                                               top_avg=auc_mean,
-                                              top_dev=auc_deviation), win='auc')
+                                              top_dev=auc_deviation), win='auc', update='append')
                 self.vis.plot_single_win(dict(value=acc,
                                               best=self.best_acc,
                                               last_avg=self.acc_last20.avg,
@@ -363,13 +369,13 @@ class RunMyModel(object):
                                               top_avg=acc_mean,
                                               top_dev=acc_deviation,
                                               sen=sen,
-                                              spe=spe), win='accuracy')
+                                              spe=spe), win='accuracy', update='append')
                 self.vis.plot_single_win(dict(value=iou,
                                               best=self.best_iou,
                                               last_avg=self.iou_last20.avg,
                                               last_std=self.iou_last20.std,
                                               top_avg=iou_mean,
-                                              top_dev=iou_deviation), win='iou')
+                                              top_dev=iou_deviation), win='iou', update='append')
 
                 metrics_str = 'best_auc = {:.4f},' \
                               'auc_last20_avg = {:.4f}, auc_last20_std = {:.4f}, ' \
@@ -380,10 +386,10 @@ class RunMyModel(object):
                                   'acc_top10_avg = {:.4f}, acc_top10_dev = {:.4f}, '. \
                     format(self.best_acc, self.acc_last20.avg, self.acc_last20.std, acc_mean, acc_deviation)
 
-                self.vis.text(metrics_str + metrics_acc_str)
+                self.vis2.text(metrics_str + metrics_acc_str)
                 print('\n', metrics_str + metrics_acc_str)
 
-        save_ckpt(version=self.vis,
+        save_ckpt(version='{}_{}'.format(self.args.version, 'SA_AE'),
                   state={
                       'epoch': self.epoch,
                       'state_dict_E': self.model.model_E.state_dict(),
@@ -412,8 +418,7 @@ class RunMyModel(object):
             """
             if category == 'val_normal':
                 loss = torch.sum((image - image_rec) ** 2) / (image.size(0) * image.size(1) * image.size(2) * image.size(3))
-                self.vis.plot_single_win(dict(val_l2_loss=loss), win='val_loss')
-
+                self.vis2.plot_single_win(dict(val_l2_loss=loss), win='val_loss')
 
             """
             preditction
@@ -423,6 +428,9 @@ class RunMyModel(object):
             image_diff_mean = image_diff.mean(dim=3).mean(dim=2).mean(dim=1)
             gt_list += [1 if is_disease else 0] * len(image_name)
             pred_list += image_diff_mean.tolist()
+
+            percentage = 0.75
+            threshold = sorted(pred_list)[int(len(pred_list) * percentage)]
 
             if category == 'val_abnormal':
                 mask = mask.cuda()
@@ -437,15 +445,7 @@ class RunMyModel(object):
             """
             save images
             """
-            if (epoch + 1) % 200 == 0:
-                output_save = os.path.join(self.args.output_root,
-                                           '{}'.format(self.args.version),
-                                           'sample')
-
-                if not os.path.exists(output_save):
-                    os.makedirs(output_save)
-                tv.utils.save_image(vim_images, os.path.join(
-                    output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=image.size(0))
+            if (epoch + 1) % 200 == 0 and i == 0:
                 """
                 visdom
                 """
@@ -465,12 +465,19 @@ class RunMyModel(object):
 
                     # self.vis.images(vim_images, win_name='{}'.format(category), nrow=self.args.vis_batch)
 
-                    '''
                     for n in range(self.args.vis_batch):
                         self.vis.plot_histogram(image_diff[n].max(dim=1)[0].view(-1), win='{}_{}'.format(category, n), numbins=500)
-                        if n > 4:
+                        if n > 2:
                             break
-                    '''
+
+                output_save = os.path.join(self.args.output_root,
+                                           '{}_{}'.format(self.args.version, 'SA_AE'),
+                                           'sample')
+
+                if not os.path.exists(output_save):
+                    os.makedirs(output_save)
+                tv.utils.save_image(vim_images, os.path.join(
+                    output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=self.args.vis_batch)
         return gt_list, pred_list, torch.FloatTensor(iou_list)
 
 

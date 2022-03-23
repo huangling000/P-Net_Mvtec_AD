@@ -200,28 +200,28 @@ class SA_Discriminator(BaseNetwork):
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.atten1 = Self_Attn(64)
+        self.atten1 = Self_Attn(64, 'relu')
 
         self.conv2 = nn.Sequential(
             nn.utils.spectral_norm(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm)),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.atten2 = Self_Attn(128)
+        self.atten2 = Self_Attn(128, 'relu')
 
         self.conv3 = nn.Sequential(
             nn.utils.spectral_norm(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm)),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.atten3 = Self_Attn(256)
+        self.atten3 = Self_Attn(256, 'relu')
 
         self.conv4 = nn.Sequential(
             nn.utils.spectral_norm(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=1, padding=1, bias=not use_spectral_norm)),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.atten4 = Self_Attn(512)
+        self.atten4 = Self_Attn(512, 'relu')
         self.atten5 = SELayer(512)
 
         self.conv5 = nn.Sequential(

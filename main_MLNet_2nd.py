@@ -232,7 +232,7 @@ class RunMyModel(object):
                 self.validate_cls()
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
-            print('Node: {}'.format(self.args.node))
+            # print('Node: {}'.format(self.args.node))
             print('GPU: {}'.format(self.args.gpu))
             print('Version: {}\n'.format(self.args.version))
 

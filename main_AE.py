@@ -187,7 +187,7 @@ class RunMyModel(object):
             self.epoch = epoch
             self.train(epoch)
 
-            if epoch % self.args.val_freq == 0:
+            if (epoch + 1) % self.args.val_freq == 0:
                 self.validate_cls(epoch)
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
@@ -228,7 +228,7 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if epoch % 199 == 0 and i == 0:
+            if (epoch + 1) % 200 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
@@ -258,11 +258,11 @@ class RunMyModel(object):
             Difference: abnormal dataloader and abnormal_list
             """
             _, normal_train_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_train_loader, is_disease=False, epoch = epoch)
+                loader=self.normal_train_loader, is_disease=False, epoch=epoch)
             abnormal_gt_list, abnormal_pred_list, abnormal_iou = self.forward_cls_dataloader(
-                loader=self.abnormal_loader, is_disease=True, category='val_abnormal', epoch = epoch)
+                loader=self.abnormal_loader, is_disease=True, category='val_abnormal', epoch=epoch)
             normal_test_gt_list, normal_test_pred_list, _ = self.forward_cls_dataloader(
-                loader=self.normal_test_loader, is_disease=False, category='val_normal', epoch = epoch)
+                loader=self.normal_test_loader, is_disease=False, category='val_normal', epoch=epoch)
 
             """
             computer metrics
@@ -313,7 +313,7 @@ class RunMyModel(object):
             """
             plot metrics curve
             """
-            if epoch % 30 == 0:
+            if (epoch + 1) % 30 == 0:
                 # ROC curve
                 self.vis.draw_roc(fpr, tpr)
                 # PR curve
@@ -395,6 +395,9 @@ class RunMyModel(object):
             gt_list += [1 if is_disease else 0] * len(image_name)
             pred_list += image_diff_mean.tolist()
 
+            percentage = 0.75
+            threshold = sorted(pred_list)[int(len(pred_list) * percentage)]
+
             if category == 'val_abnormal':
                 mask = mask.cuda()
                 ano_region_mask = (image_diff.mean(dim=1) >= threshold).float()
@@ -408,15 +411,8 @@ class RunMyModel(object):
             """
             save images
             """
-            if epoch % 199 == 0:
-                output_save = os.path.join(self.args.output_root,
-                                           '{}'.format(self.args.version),
-                                           'sample')
+            if (epoch + 1) % 200 == 0 and i == 0:
 
-                if not os.path.exists(output_save):
-                    os.makedirs(output_save)
-                tv.utils.save_image(vim_images, os.path.join(
-                    output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=image.size(0))
                 """
                 visdom
                 """
@@ -436,12 +432,18 @@ class RunMyModel(object):
 
                     # self.vis.images(vim_images, win_name='{}'.format(category), nrow=self.args.vis_batch)
 
-                    '''
                     for n in range(self.args.vis_batch):
                         self.vis.plot_histogram(image_diff[n].max(dim=1)[0].view(-1), win='{}_{}'.format(category, n), numbins=500)
-                        if n > 4:
+                        if n > 2:
                             break
-                    '''
+                output_save = os.path.join(self.args.output_root,
+                                           '{}'.format(self.args.version),
+                                           'sample')
+
+                if not os.path.exists(output_save):
+                    os.makedirs(output_save)
+                tv.utils.save_image(vim_images, os.path.join(
+                    output_save, '{}_{}_{}.png'.format(category, self.epoch, i)), nrow=self.args.vis_batch)
         return gt_list, pred_list, torch.FloatTensor(iou_list)
 
 

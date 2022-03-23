@@ -54,7 +54,7 @@ class Visualizer(object):
             index_k = '{}_{}'.format(k, win)
             x = self.index.get(index_k, 0)
             self.viz.line(Y=np.array([v]), X=np.array([x]),
-                          name=k if model == "default" else '{}_{}'.format(self.model, k),
+                          name=k if self.model == "default" else '{}_{}'.format(self.model, k),
                           win=win,
                           opts=dict(title=win, showlegend=True),
                           update= update if update is not None else ('append' if self.win_index.get(win, 0) > 0 and loop_i > 0 else None))
@@ -150,21 +150,22 @@ class Visualizer(object):
     def line(self, Y, X, win_name='line', **kwargs):
         self.viz.line(Y, X=X, win=win_name, opts=dict(title=win_name), **kwargs)
 
-    def draw_roc(self, fpr, tpr):
+    def draw_roc(self, fpr, tpr, update=None):
         self.viz.line(Y=np.array(tpr), X=np.array(fpr),
-                      name='roc_curve_AE',
+                      name='{}_{}'.format('roc_curve', self.model),
                       win='roc_curve',
+                      update=update,
                       opts=dict(title='roc_curve', showlegend=True))
 
-    def draw_pr(self, recall, precision):
+    def draw_pr(self, recall, precision, update=None):
         self.viz.line(Y=np.array(precision), X=np.array(recall),
-                      name='pr_curve_AE',
+                      name='{}_{}'.format('pr_curve', self.model),
                       win='pr_curve',
                       opts=dict(title='pr_curve', showlegend=True))
 
-    def draw_iou(self, fpr, iou):
+    def draw_iou(self, fpr, iou, update=None):
         self.viz.line(Y=np.array(iou), X=np.array(fpr),
-                      name='iou_curve_AE',
+                      name='{}_{}'.format('iou_curve', self.model),
                       win='iou_curve',
                       opts=dict(title='iou_curve', showlegend=True))
 
