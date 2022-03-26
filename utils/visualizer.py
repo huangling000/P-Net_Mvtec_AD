@@ -31,7 +31,7 @@ class Visualizer(object):
         self.viz.histogram(x, win=win, opts=dict(numbins=numbins, title=win))
 
     # plot line
-    def plot_multi_win(self, d, loop_flag=None):
+    def plot_multi_win(self, d, loop_flag=None, update=None):
         '''
         一次plot多个或者一个
         @params d: dict (name, value) i.e. ('loss', 0.11)
@@ -40,7 +40,7 @@ class Visualizer(object):
         if loop_flag == 0:
             long_update = False
         for k, v in d.items():
-            self.plot(k, v, long_update)
+            self.plot(k, v, long_update, update=update)
 
     def plot_single_win(self, d, win, loop_i=1, update=None):
         """
@@ -53,11 +53,11 @@ class Visualizer(object):
         for k, v in d.items():
             index_k = '{}_{}'.format(k, win)
             x = self.index.get(index_k, 0)
-            self.viz.line(Y=np.array([v]), X=np.array([x]),
+            self.viz.line(Y=np.array([float(v)]), X=np.array([float(x)]),
                           name=k if self.model == "default" else '{}_{}'.format(self.model, k),
                           win=win,
                           opts=dict(title=win, showlegend=True),
-                          update= update if update is not None else ('append' if self.win_index.get(win, 0) > 0 and loop_i > 0 else None))
+                          update=update if update is not None else ('append' if self.win_index.get(win, 0) > 0 and loop_i > 0 else None))
                           # update=None if (x == 0 or loop_i == 0) else 'append')
             self.index[index_k] = x + 1
             self.win_index[win] = 1
@@ -79,7 +79,7 @@ class Visualizer(object):
                       **kwargs)
         self.index[name] = x + 1    # Maintain the X
 
-    def plot(self, name, y, long_update, x=None, **kwargs):
+    def plot(self, name, y, long_update, x=None, update=None, **kwargs):
         '''
         self.plot('loss', 1.00)
         One mame, one win: only one lie in a win.
@@ -92,7 +92,7 @@ class Visualizer(object):
             self.viz.line(Y=np.array([y]), X=np.array([x]),
                           win=name,
                           opts=dict(title=name),
-                          update='append' if (x > 0 and long_update) else None,
+                          update=update if update is not None else 'append' if (x > 0 and long_update) else None,
                           **kwargs)
             self.index[name] = x + 1    # Maintain the X
 

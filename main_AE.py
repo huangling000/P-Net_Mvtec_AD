@@ -146,7 +146,7 @@ class RunMyModel(object):
 
         cudnn.benchmark = True
 
-        self.vis = Visualizer(env='{}'.format(args.version), port=args.port, server=args.vis_server, model="AE")
+        self.vis = Visualizer(env='{}_{}'.format(args.version, 'AE'), port=args.port, server=args.vis_server, model="AE")
         self.normal_train_loader, self.normal_test_loader, self.abnormal_loader =\
             Mvtec_Dataloader(data_root=args.mvtec_root,
                              batch=args.batch,
@@ -191,9 +191,8 @@ class RunMyModel(object):
                 self.validate_cls(epoch)
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
-            print('Node: {}'.format(self.args.node))
             print('GPU: {}'.format(self.args.gpu))
-            print('Version: {}\n'.format(self.args.version))
+            print('Version: {}_{}\n'.format(self.args.version, 'AE'))
 
     def train(self, epoch):
         self.model.train()
@@ -236,7 +235,7 @@ class RunMyModel(object):
                 self.vis.images(vim_images, win_name='train', nrow=self.args.vis_batch)
 
                 output_save = os.path.join(self.args.output_root,
-                                           self.args.version,
+                                           '{}_{}'.format(self.args.version, 'AE'),
                                            'sample')
                 os.makedirs(output_save, exist_ok=True)
                 tv.utils.save_image(vim_images,
@@ -244,7 +243,7 @@ class RunMyModel(object):
                                     nrow=self.args.vis_batch)
 
             if i + 1 == train_loader.__len__():
-                self.vis.plot_multi_win(dict(dis_loss=dis_loss.item()))
+                self.vis.plot_single_win(dict(dis_loss=dis_loss.item()), win='dis_loss')
                 self.vis.plot_single_win(dict(gen_loss=gen_loss.item(),
                                               gen_l2_loss=logs['gen_l2_loss'].item(),
                                               gen_gan_loss=logs['gen_gan_loss'].item()),
@@ -326,7 +325,7 @@ class RunMyModel(object):
                                               last_avg=self.auc_last20.avg,
                                               last_std=self.auc_last20.std,
                                               top_avg=auc_mean,
-                                              top_dev=auc_deviation), win='auc', update="append")
+                                              top_dev=auc_deviation), win='auc')
                 self.vis.plot_single_win(dict(value=acc,
                                               best=self.best_acc,
                                               last_avg=self.acc_last20.avg,
@@ -334,13 +333,13 @@ class RunMyModel(object):
                                               top_avg=acc_mean,
                                               top_dev=acc_deviation,
                                               sen=sen,
-                                              spe=spe), win='accuracy', update="append")
+                                              spe=spe), win='accuracy')
                 self.vis.plot_single_win(dict(value=iou,
                                               best=self.best_iou,
                                               last_avg=self.iou_last20.avg,
                                               last_std=self.iou_last20.std,
                                               top_avg=iou_mean,
-                                              top_dev=iou_deviation), win='iou', update="append")
+                                              top_dev=iou_deviation), win='iou')
 
                 metrics_str = 'best_auc = {:.4f},' \
                               'auc_last20_avg = {:.4f}, auc_last20_std = {:.4f}, ' \
@@ -354,7 +353,7 @@ class RunMyModel(object):
                 self.vis.text(metrics_str + metrics_acc_str)
                 print('\n', metrics_str + metrics_acc_str)
 
-        save_ckpt(version=self.args.version,
+        save_ckpt(version='{}_{}'.format(self.args.version, 'AE'),
                   state={
                       'epoch': self.epoch,
                       'state_dict_E': self.model.model_E.state_dict(),
@@ -437,7 +436,7 @@ class RunMyModel(object):
                         if n > 2:
                             break
                 output_save = os.path.join(self.args.output_root,
-                                           '{}'.format(self.args.version),
+                                           '{}_{}'.format(self.args.version, 'AE'),
                                            'sample')
 
                 if not os.path.exists(output_save):

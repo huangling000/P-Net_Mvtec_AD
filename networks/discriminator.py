@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pdb
 
-from networks.AE_GAN import Self_Attn, SELayer
+from networks.AE_GAN import Self_Attn, SELayer, MSelf_Attention
 
 
 class BaseNetwork(nn.Module):
@@ -234,12 +234,9 @@ class SA_Discriminator(BaseNetwork):
 
     def forward(self, x):
         conv1 = self.conv1(x)
-        conv1_s = self.atten1(conv1)
-        conv2 = self.conv2(conv1_s)
-        conv2_s = self.atten2(conv2)
-        conv3 = self.conv3(conv2_s)
-        conv3_s = self.atten3(conv3)
-        conv4 = self.conv4(conv3_s)
+        conv2 = self.conv2(conv1)
+        conv3 = self.conv3(conv2)
+        conv4 = self.conv4(conv3)
         conv4_s = self.atten4(conv4)
         conv4_s = self.atten5(conv4_s)
         conv5 = self.conv5(conv4_s)
@@ -247,7 +244,84 @@ class SA_Discriminator(BaseNetwork):
         outputs = conv5
         if self.use_sigmoid:
             outputs = torch.sigmoid(conv5)
-        return outputs, [conv1_s, conv2_s, conv3_s, conv4_s, conv5]
+        return outputs, [conv1, conv2, conv3, conv4_s, conv5]
+
+class MSSA_Discriminator(BaseNetwork):
+    def __init__(self, in_channels, use_sigmoid=True, use_spectral_norm=True, init_weights=True):
+        # W_out = W_in / 8 (Patch GAN)
+        super(MSSA_Discriminator, self).__init__()
+        self.use_sigmoid = use_sigmoid
+
+        self.conv1 = self.features = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=in_channels, out_channels=64, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm)),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.atten1 = Self_Attn(64, 'relu')
+
+        self.conv2 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm)),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.atten2 = Self_Attn(128, 'relu')
+
+        self.conv3 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm)),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.atten3 = Self_Attn(256, 'relu')
+
+        self.conv4 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=256, out_channels=256, kernel_size=4, stride=1, padding=1, bias=not use_spectral_norm)),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.atten4 = MSelf_Attention(256)
+        self.atten5 = SELayer(256)
+
+        self.conv5 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=1, padding=1,
+                                             bias=not use_spectral_norm)),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.conv6 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=512, out_channels=512, kernel_size=4, stride=1, padding=1,
+                                             bias=not use_spectral_norm)),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.atten7 = MSelf_Attention(512)
+        self.atten8 = SELayer(512)
+
+        self.conv7 = nn.Sequential(
+            nn.utils.spectral_norm(nn.Conv2d(in_channels=512, out_channels=1, kernel_size=4, stride=1, padding=1, bias=not use_spectral_norm)),
+        )
+
+
+        if init_weights:
+            self.init_weights()
+
+    def forward(self, x):
+        conv1 = self.conv1(x)
+        conv2 = self.conv2(conv1)
+        conv3 = self.conv3(conv2) #256
+        conv4 = self.conv4(conv3) #256
+        conv3_s, conv4_s = self.atten4(conv3, conv4)
+        conv3_s = self.atten5(conv3_s) #256
+
+        conv5 = self.conv5(conv3_s) #512
+        conv6 = self.conv6(conv5) #512
+        conv5_s, conv6_s = self.atten7(conv5, conv6)
+        conv5_s = self.atten8(conv5_s)
+        conv7 = self.conv7(conv5_s)
+
+        outputs = conv7
+        if self.use_sigmoid:
+            outputs = torch.sigmoid(conv5)
+        return outputs, [conv1, conv2, conv3_s, conv5_s, conv7]
 
 class ResnetBlock(nn.Module):
     def __init__(self, dim, dilation=1, use_spectral_norm=False):

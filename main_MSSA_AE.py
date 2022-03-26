@@ -14,8 +14,8 @@ import torch.nn.parallel
 import torch.optim
 
 from dataloader.Mvtec_Loader import Mvtec_Dataloader
-from networks.AE_GAN import Encoder, Decoder, SA_Encoder, SA_Encoder2
-from networks.discriminator import Discriminator, SA_Discriminator
+from networks.AE_GAN import Encoder, Decoder, SA_Encoder, SA_Encoder2, SA_Encoder3
+from networks.discriminator import Discriminator, SA_Discriminator, MSSA_Discriminator
 from utils.vgg_loss import AdversarialLoss, PerceptualLoss, StyleLoss
 from utils.visualizer import Visualizer
 from utils.trick import adjust_lr, cuda_visible, print_args, save_ckpt, AverageMeter, LastAvgMeter
@@ -26,10 +26,10 @@ class AAE_NetModel(nn.Module):
     def __init__(self, args):
         super(AAE_NetModel, self).__init__()
         self.args = args
-        model_E = SA_Encoder2(args.latent_size, channel=3, mode='dae')
+        model_E = SA_Encoder3(args.latent_size, channel=3, mode='dae')
         model_De = Decoder(args.latent_size, output_channel=3, mode='dae')
-        model_E2 = SA_Encoder2(args.latent_size, channel=3, mode='dae')
-        model_D = SA_Discriminator(in_channels=3)
+        model_E2 = SA_Encoder3(args.latent_size, channel=3, mode='dae')
+        model_D = MSSA_Discriminator(in_channels=3)
 
         model_E = nn.DataParallel(model_E).cuda()
         model_De = nn.DataParallel(model_De).cuda()
@@ -172,7 +172,7 @@ class RunMyModel(object):
 
         cudnn.benchmark = True
 
-        self.vis2 = Visualizer(env='{}_{}'.format(args.version, 'SA_AE'), port=args.port, server=args.vis_server, model='SA_AE')
+        self.vis2 = Visualizer(env='{}_{}'.format(args.version, 'MSSA_AE'), port=args.port, server=args.vis_server, model='MSSA_AE')
         self.normal_train_loader, self.normal_test_loader, self.abnormal_loader =\
             Mvtec_Dataloader(data_root=args.mvtec_root,
                              batch=args.batch,
@@ -262,7 +262,7 @@ class RunMyModel(object):
                 self.vis2.images(vim_images, win_name='train', nrow=self.args.vis_batch)
 
                 output_save = os.path.join(self.args.output_root,
-                                           '{}_{}'.format(self.args.version, 'SA_AE'),
+                                           '{}_{}'.format(self.args.version, 'MSSA_AE'),
                                            'sample')
                 os.makedirs(output_save, exist_ok=True)
                 tv.utils.save_image(vim_images,
@@ -277,7 +277,7 @@ class RunMyModel(object):
                                               gen_f_loss=(logs['gen_f1_loss'].item() +
                                                           logs['gen_f2_loss'].item() +
                                                           logs['gen_f3_loss'].item())),
-                                         win='gen_loss')
+                                              win='gen_loss')
 
     def validate_cls(self, epoch):
         self.model.eval()
@@ -414,7 +414,7 @@ class RunMyModel(object):
             """
             if category == 'val_normal':
                 loss = torch.sum((image - image_rec) ** 2) / (image.size(0) * image.size(1) * image.size(2) * image.size(3))
-                self.vis2.plot_single_win(dict(val_l2_loss=loss), win='val_loss')
+                self.vis2.plot_single_win(dict(val_l2_loss=loss))
 
             """
             preditction
@@ -441,7 +441,7 @@ class RunMyModel(object):
             """
             save images
             """
-            if (epoch + 1) % 2 == 0 and i == 0:
+            if (epoch + 1) % 200 == 0 and i == 0:
                 """
                 visdom
                 """

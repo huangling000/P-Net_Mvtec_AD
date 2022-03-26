@@ -28,7 +28,6 @@ class double_conv(nn.Module):
         x2 = self.conv2(x1)
         if self.residual:
             x2 = x2 + x1
-
         return x2
 
 
