@@ -26,6 +26,8 @@ class AAE_NetModel(nn.Module):
     def __init__(self, args):
         super(AAE_NetModel, self).__init__()
         self.args = args
+        self.index = {}
+        self.win_index = {}
         model_E = SA_Encoder2(args.latent_size, channel=3, mode='dae')
         model_De = Decoder(args.latent_size, output_channel=3, mode='dae')
         model_E2 = SA_Encoder2(args.latent_size, channel=3, mode='dae')
@@ -41,7 +43,6 @@ class AAE_NetModel(nn.Module):
         adversarial_loss = AdversarialLoss().cuda()
 
         # self.add_module('model_G1', model_G1)
-        self.add_module('model_E', model_E)
         self.add_module('model_De', model_De)
         self.add_module('model_E2', model_E2)
         self.add_module('model_D', model_D)
@@ -79,6 +80,8 @@ class AAE_NetModel(nn.Module):
                 self.model_De.load_state_dict(checkpoint['state_dict_De'])
                 self.model_E2.load_state_dict(checkpoint['state_dict_E2'])
                 self.model_D.load_state_dict(checkpoint['state_dict_D'])
+                self.index = checkpoint['index']
+                self.win_index = checkpoint['win_index']
                 print("=> loaded checkpoint '{}' (epoch {})"
                       .format(args.resume, checkpoint['epoch']))
             else:
@@ -185,6 +188,9 @@ class RunMyModel(object):
         self.args = args
         self.new_lr = self.args.lr
         self.model = AAE_NetModel(args)
+
+        self.vis2.index = self.model.index
+        self.vis2.win_index = self.model.win_index
 
         self.threshold = 0.1
 
@@ -391,6 +397,8 @@ class RunMyModel(object):
                       'state_dict_De': self.model.model_De.state_dict(),
                       'state_dict_E2': self.model.model_E2.state_dict(),
                       'state_dict_D': self.model.model_D.state_dict(),
+                      'index': self.vis2.index,
+                      'win_index': self.vis2.win_index
                   },
                   epoch=self.epoch,
                   is_best=self.is_best,

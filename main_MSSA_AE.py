@@ -31,6 +31,9 @@ class AAE_NetModel(nn.Module):
         model_E2 = SA_Encoder3(args.latent_size, channel=3, mode='dae')
         model_D = MSSA_Discriminator(in_channels=3)
 
+        self.index = {}
+        self.win_index = {}
+
         model_E = nn.DataParallel(model_E).cuda()
         model_De = nn.DataParallel(model_De).cuda()
         model_E2 = nn.DataParallel(model_E2).cuda()
@@ -79,6 +82,8 @@ class AAE_NetModel(nn.Module):
                 self.model_De.load_state_dict(checkpoint['state_dict_De'])
                 self.model_E2.load_state_dict(checkpoint['state_dict_E2'])
                 self.model_D.load_state_dict(checkpoint['state_dict_D'])
+                self.index = checkpoint['index']
+                self.win_index = checkpoint['win_index']
                 print("=> loaded checkpoint '{}' (epoch {})"
                       .format(args.resume, checkpoint['epoch']))
             else:
@@ -185,6 +190,9 @@ class RunMyModel(object):
         self.args = args
         self.new_lr = self.args.lr
         self.model = AAE_NetModel(args)
+
+        self.vis2.index = self.model.index
+        self.vis2.win_index = self.model.win_index
 
         self.threshold = 0.1
 
@@ -391,6 +399,8 @@ class RunMyModel(object):
                       'state_dict_De': self.model.model_De.state_dict(),
                       'state_dict_E2': self.model.model_E2.state_dict(),
                       'state_dict_D': self.model.model_D.state_dict(),
+                      'index': self.vis2.index,
+                      'win_index': self.vis2.win_index
                   },
                   epoch=self.epoch,
                   is_best=self.is_best,
@@ -414,7 +424,7 @@ class RunMyModel(object):
             """
             if category == 'val_normal':
                 loss = torch.sum((image - image_rec) ** 2) / (image.size(0) * image.size(1) * image.size(2) * image.size(3))
-                self.vis2.plot_single_win(dict(val_l2_loss=loss))
+                self.vis2.plot_single_win(dict(val_l2_loss=loss), win='val_normal')
 
             """
             preditction
