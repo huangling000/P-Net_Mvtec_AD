@@ -71,7 +71,7 @@ class Visualizer(object):
         # self.vis.plot_legend(win='iou', name='val', y=iou.mean())
         x = self.index.get(
             name, 0)  # dict.get(key, default=None). 返回指定键的值，如果值不在字典中返回default值
-        self.viz.line(Y=np.array([y]), X=np.array([x]),
+        self.viz.line(Y=np.array([float(y)]), X=np.array([float(x)]),
                       name=name,
                       win=win,
                       opts=dict(title=win, showlegend=True),
@@ -85,11 +85,11 @@ class Visualizer(object):
         One mame, one win: only one lie in a win.
         '''
         if x:
-            self.viz.line(Y=np.array([y]), X=np.array([x]))
+            self.viz.line(Y=np.array([float(y)]), X=np.array([float(x)]))
         else:
             x = self.index.get(
                 name, 0)  # dict.get(key, default=None). 返回指定键的值，如果值不在字典中返回default值
-            self.viz.line(Y=np.array([y]), X=np.array([x]),
+            self.viz.line(Y=np.array([float(y)]), X=np.array([float(x)]),
                           win=name,
                           opts=dict(title=name),
                           update=update if update is not None else 'append' if (x > 0 and long_update) else None,

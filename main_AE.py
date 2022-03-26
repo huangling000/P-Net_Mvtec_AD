@@ -64,7 +64,7 @@ class AE_NetModel(nn.Module):
                                             betas=(args.b1, args.b2))
 
         if self.args.resume:
-            ckpt_root = os.path.join(self.args.output_root, self.args.version, 'checkpoints')
+            ckpt_root = os.path.join(self.args.output_root, '{}_{}'.format(self.args.version, 'AE'), 'checkpoints')
             ckpt_path = os.path.join(ckpt_root, args.resume)
             if os.path.isfile(ckpt_path):
                 print("=> loading checkpoint '{}'".format(args.resume))

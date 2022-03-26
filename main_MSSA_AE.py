@@ -72,7 +72,7 @@ class AAE_NetModel(nn.Module):
                                             betas=(args.b1, args.b2))
 
         if self.args.resume:
-            ckpt_root = os.path.join(self.args.output_root, '{}_{}'.format(self.args.version, 'SA_AE'), 'checkpoints')
+            ckpt_root = os.path.join(self.args.output_root, '{}_{}'.format(self.args.version, 'MSSA_AE'), 'checkpoints')
             ckpt_path = os.path.join(ckpt_root, args.resume)
             if os.path.isfile(ckpt_path):
                 print("=> loading checkpoint '{}'".format(args.resume))
@@ -227,7 +227,7 @@ class RunMyModel(object):
 
             print('\n', '*' * 10, 'Program Information', '*' * 10)
             print('GPU: {}'.format(self.args.gpu))
-            print('Version: {}_{}\n'.format(self.args.version, 'SA_AE'))
+            print('Version: {}_{}\n'.format(self.args.version, 'MSSA_AE'))
 
     def train(self, epoch):
         self.model.train()
@@ -392,7 +392,7 @@ class RunMyModel(object):
                 self.vis2.text(metrics_str + metrics_acc_str)
                 print('\n', metrics_str + metrics_acc_str)
 
-        save_ckpt(version='{}_{}'.format(self.args.version, 'SA_AE'),
+        save_ckpt(version='{}_{}'.format(self.args.version, 'MSSA_AE'),
                   state={
                       'epoch': self.epoch,
                       'state_dict_E': self.model.model_E.state_dict(),
@@ -477,7 +477,7 @@ class RunMyModel(object):
                             break
 
                 output_save = os.path.join(self.args.output_root,
-                                           '{}_{}'.format(self.args.version, 'SA_AE'),
+                                           '{}_{}'.format(self.args.version, 'MSSA_AE'),
                                            'sample')
 
                 if not os.path.exists(output_save):
