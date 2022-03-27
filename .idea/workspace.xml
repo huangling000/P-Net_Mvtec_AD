@@ -5,7 +5,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_AE.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_AE.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_MSSA_AE.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_MSSA_AE.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/visualizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/visualizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_SelfAttenAE.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_SelfAttenAE.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/unet_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/unet_part.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,7 +25,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../DCGAN" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -40,7 +41,7 @@
       <workItem from="1647827761442" duration="7662000" />
       <workItem from="1647836996473" duration="57959000" />
       <workItem from="1648054628019" duration="26677000" />
-      <workItem from="1648224927856" duration="11783000" />
+      <workItem from="1648224927856" duration="19219000" />
     </task>
     <servers />
   </component>

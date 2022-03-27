@@ -46,7 +46,7 @@ class down(nn.Module):
         super(down, self).__init__()
         self.mpconv = nn.Sequential(
             nn.MaxPool2d(2),
-            double_conv(in_ch, out_ch, residual=False)
+            double_conv(in_ch, out_ch, residual=True)
         )
 
     def forward(self, x):

@@ -419,16 +419,16 @@ class RunMyModel(object):
             """
             save images
             """
-            if (epoch + 1) % 200 == 0 and i == 0:
+            if (epoch + 1) % 100 == 0 and i == 0:
 
                 """
                 visdom
                 """
+                image = image[:self.args.vis_batch]
+                image_rec = image_rec[:self.args.vis_batch]
+                mask = mask[:self.args.vis_batch]
+                image_diff = torch.abs(image - image_rec)
                 if i == 0 and category != 'train_normal':
-                    image = image[:self.args.vis_batch]
-                    image_rec = image_rec[:self.args.vis_batch]
-                    mask = mask[:self.args.vis_batch]
-                    image_diff = torch.abs(image - image_rec)
                     """
                     Difference: edge is different between fundus and oct images
                     """

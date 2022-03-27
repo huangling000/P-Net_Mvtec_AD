@@ -260,7 +260,7 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if (epoch + 1) % 200 == 0 and i == 0:
+            if (epoch + 1) % 100 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
