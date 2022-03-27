@@ -87,7 +87,7 @@ class ParserArgs(object):
                                  help='number of total epochs to run')
         self.parser.add_argument('--batch', default=18, type=int,
                                  metavar='N', help='mini-batch size')
-        self.parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
+        self.parser.add_argument('--lr', '--learning-rate', default=0.0002, type=float,
                                  metavar='LR', help='initial learning rate')
         self.parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                                  help='momentum')

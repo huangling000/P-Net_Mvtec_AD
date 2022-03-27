@@ -25,8 +25,9 @@ import time
 
 def adjust_lr(original_lr, optimizer, epoch, adjust_epoch):
     """Sets the learning rate to the initial LR decayed by 10 every $e_freq epochs"""
-    if epoch in adjust_epoch:
-        new_lr = pow(0.1, adjust_epoch.index(epoch) + 1) * original_lr
+    if (epoch + 1) in adjust_epoch:
+        # new_lr = pow(0.1, adjust_epoch.index(epoch) + 1) * original_lr
+        new_lr = pow(0.1, 1) * original_lr
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
 

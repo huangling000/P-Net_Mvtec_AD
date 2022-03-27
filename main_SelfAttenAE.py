@@ -211,7 +211,7 @@ class RunMyModel(object):
         # general metrics
         self.vis2.text(str(vars(self.args)), name='args')
         for epoch in range(self.args.start_epoch, self.args.n_epochs):
-            adjust_lr_epoch_list = [500]
+            adjust_lr_epoch_list = [25, 50, 100, 150]
             _ = adjust_lr(self.args.lr, self.model.optimizer_E, epoch, adjust_lr_epoch_list)
             _ = adjust_lr(self.args.lr, self.model.optimizer_De, epoch, adjust_lr_epoch_list)
             _ = adjust_lr(self.args.lr, self.model.optimizer_E2, epoch, adjust_lr_epoch_list)
@@ -260,7 +260,7 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if (epoch + 1) % 100 == 0 and i == 0:
+            if (epoch + 1) % 50 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
@@ -315,7 +315,7 @@ class RunMyModel(object):
             """
             compute thereshold, and then compute the accuracy
             """
-            percentage = 0.75
+            percentage = 0.95
             threshold_for_acc = sorted(normal_train_pred_list)[int(len(normal_train_pred_list) * percentage)]
             normal_cls_pred_list = [(0 if i < threshold_for_acc else 1) for i in normal_test_pred_list]
             abnormal_cls_pred_list = [(0 if i < threshold_for_acc else 1) for i in abnormal_pred_list]
@@ -348,7 +348,7 @@ class RunMyModel(object):
             """
             plot metrics curve
             """
-            if (epoch + 1) % 30 == 0:
+            if (epoch + 1) % 5 == 0:
                 # ROC curve
                 self.vis2.draw_roc(fpr, tpr)
                 # PR curve
@@ -433,7 +433,7 @@ class RunMyModel(object):
             gt_list += [1 if is_disease else 0] * len(image_name)
             pred_list += image_diff_mean.tolist()
 
-            percentage = 0.75
+            percentage = 0.95
             threshold = sorted(pred_list)[int(len(pred_list) * percentage)]
 
             if category == 'val_abnormal':
@@ -449,23 +449,25 @@ class RunMyModel(object):
             """
             save images
             """
-            if (epoch + 1) % 100 == 0 and i == 0:
+            if (epoch + 1) % 50 == 0 and i == 0:
                 """
                 visdom
                 """
+                image = image[:self.args.vis_batch]
+                image_rec = image_rec[:self.args.vis_batch]
+                mask = mask[:self.args.vis_batch]
+                image_diff = torch.abs(image - image_rec)
                 if i == 0 and category != 'train_normal':
-                    image = image[:self.args.vis_batch]
-                    image_rec = image_rec[:self.args.vis_batch]
-                    mask = mask[:self.args.vis_batch]
-                    image_diff = torch.abs(image - image_rec)
                     """
                     Difference: edge is different between fundus and oct images
                     """
                     if category == 'val_normal':
                         vim_images = torch.cat([image, image_rec, image_diff], dim=0)
                     else:
+                        ano_region_mask = (image_diff.mean(dim=1, keepdim=True) >= threshold).float()
+                        ano_mask = torch.cat([ano_region_mask, ano_region_mask, ano_region_mask], dim=1)
                         mask_vis = torch.cat([mask, mask, mask], dim=1)
-                        vim_images = torch.cat([image, image_rec, image_diff, mask_vis.cuda()], dim=0)
+                        vim_images = torch.cat([image, image_rec, image_diff, ano_mask.cuda(), mask_vis.cuda()], dim=0)
 
                     # self.vis.images(vim_images, win_name='{}'.format(category), nrow=self.args.vis_batch)
 
