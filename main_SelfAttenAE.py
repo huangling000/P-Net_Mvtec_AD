@@ -392,7 +392,7 @@ class RunMyModel(object):
 
         save_ckpt(version='{}_{}'.format(self.args.version, 'SA_AE'),
                   state={
-                      'epoch': self.epoch,
+                      'epoch': self.epoch + 1,
                       'state_dict_E': self.model.model_E.state_dict(),
                       'state_dict_De': self.model.model_De.state_dict(),
                       'state_dict_E2': self.model.model_E2.state_dict(),
@@ -449,7 +449,7 @@ class RunMyModel(object):
             """
             save images
             """
-            if (epoch + 1) % 2 == 0 and i == 0:
+            if (epoch + 1) % 100 == 0 and i == 0:
                 """
                 visdom
                 """

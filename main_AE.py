@@ -234,7 +234,7 @@ class RunMyModel(object):
             # --------------
             #  Visdom
             # --------------
-            if (epoch + 1) % 200 == 0 and i == 0:
+            if (epoch + 1) % 100 == 0 and i == 0:
                 image = image[:self.args.vis_batch]
                 image_rec = image_rec[:self.args.vis_batch]
                 image_diff = torch.abs(image - image_rec)
@@ -362,7 +362,7 @@ class RunMyModel(object):
 
         save_ckpt(version='{}_{}'.format(self.args.version, 'AE'),
                   state={
-                      'epoch': self.epoch,
+                      'epoch': self.epoch +1,
                       'state_dict_E': self.model.model_E.state_dict(),
                       'state_dict_De': self.model.model_De.state_dict(),
                       'state_dict_D': self.model.model_D.state_dict(),
